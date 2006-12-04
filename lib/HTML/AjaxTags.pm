@@ -101,23 +101,16 @@ Function to execute if there is a server exception (non-200 HTTP response)
 =cut
 
 
-
 package HTML::AjaxTags;
 
-# be careful of the dash or no dash parameter phenomena in CGI
-
 use strict;
-use vars qw(@ISA $VERSION);
-require CGI;
-use Data::Dumper;
-use Carp;
+use warnings;
+
+our $VERSION = '0.01';
 
 sub new {
     my $class = shift;
-    my $cgi = shift;
-        bless {
-            cgi=>$cgi,
-        }, $class;
+        bless {}, $class;
 
 }
 
