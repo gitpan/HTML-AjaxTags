@@ -1,0 +1,17 @@
+---
+name: HTML-AjaxTags
+version: 0.04
+author:
+  - 'Kevin McGrath, kmcgrath@baknet.com'
+abstract: AjaxTags implementation
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
+provides:
+  HTML::AjaxTags:
+    file: lib/HTML/AjaxTags.pm
+    version: 0.04
+generated_by: Module::Build version 0.28
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

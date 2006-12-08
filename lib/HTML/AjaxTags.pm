@@ -8,9 +8,9 @@ HTML::AjaxTags - AjaxTags implementation
 
 =head1 DESCRIPTION
 
-HTML::AjaxTags is a re-write of AjaxTags (http://ajaxtags.sourceforge.net/index.html) for perl.  The original java classes have been replaced by perl methods.  
+HTML::AjaxTags is a re-write of AjaxTags (http://ajaxtags.sourceforge.net/index.html) for perl.
 
-The following documentation was taken directly from the AjaxTags web site.  The only changes made are to accomidate for calling AjaxTags methods though perl instead of jsp tags.
+Most of the following documentation was taken directly from the AjaxTags web site.  Changes were made to accommodate for calling AjaxTags methods though perl instead of jsp tags.
 
 =cut
 
@@ -106,7 +106,7 @@ package HTML::AjaxTags;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.04';
 
 sub new {
     my $class = shift;
@@ -143,19 +143,19 @@ CSS class name to apply to the popup autocomplete dropdown
 
 =item B<Optional Parameters>
 
-=item * progressStyle
+=item * indicator
 
 =over
 
-Used to define a CSS style that places an icon in the input field
+ID of indicator region that will show during Ajax request call
 
 =back
 
-=item * forceSelection
+=item * appendSeparator
 
 =over
 
-true/false indicator of whether entry is restricted to displayed choices
+The separator to use for the target field when values are appended [default=space]. If appendValue is not set or is set to "false", this parameter has no effect.
 
 =back
 
@@ -167,19 +167,19 @@ Minimum number of characters needed before autocomplete is executed
 
 =back
 
-=item * appendValue
+=item * var
 
 =over
 
-Indicates whether the value should be appended to the target field or simply replaced [default=false]
+Name of the JavaScript object created
 
 =back
 
-=item * appendSeparator
+=item * attachTo
 
 =over
 
-The separator to use for the target field when values are appended [default=space]. If appendValue is not set or is set to "false", this parameter has no effect.
+Name of the JavaScript object to which autocompleter will attach. You must define 'var' for this to work.
 
 =back
 
@@ -198,31 +198,28 @@ sub autoComplete {
 
     my @elements;
 
-    push @elements, qq[minimumCharacters:"$data{minimumCharacters}"],
-                    qq[parameters:"$data{parameters}"],
+    push @elements, qq[parameters:"$data{parameters}"],
                     qq[parser:new ResponseXmlToHtmlListParser()],
                     qq[className:"$data{className}"];
 
-    #push @elements, qq[progressStyle:"$data{progressStyle}"] if $data{progressStyle};
     push @elements, qq[target:"$data{target}"] if $data{target};
     push @elements, qq[source:"$data{source}"] if $data{source};
-    push @elements, qq[forceSelection:"$data{forceSelection}"] if $data{forceSelection};
-    push @elements, qq[appendValue:"$data{appendValue}"] if $data{appendValue};
     push @elements, qq[appendSeparator:"$data{appendSeparator}"] if $data{appendSeparator};
-    push @elements, qq[eventType:"$data{eventType}"] if $data{eventType};
     push @elements, qq[postFunction:$data{postFunction}] if $data{postFunction};
-    push @elements, qq[emptyFunction:$data{emptyFunction}] if $data{emptyFunction};
     push @elements, qq[errorFunction:$data{errorFunction}] if $data{errorFunction};
-    push @elements, qq[var:"$data{var}"] if $data{var};
     push @elements, qq[attachTo:"$data{attachTo}"] if $data{attachTo};
     push @elements, qq[parser:"$data{parser}"] if $data{parser};
     push @elements, qq[indicator:"$data{indicator}"] if $data{indicator};
+    push @elements, qq[minimumCharacters:"$data{minimumCharacters}"] if $data{minimumCharacters};
+    
 
     my $elem = join ',', @elements;
 
+    my $var = $data{var} ? "$data{var} = " : "";
+
     my $scriptTag = <<END;
 <script type="text/javascript">
-    new $data{jsFunc} (
+    $var new $data{jsFunc} (
         "$data{baseUrl}", {
         $elem
     })
@@ -240,8 +237,7 @@ END
 
 =over
 
-The 'callout' is an easy way to attach a callout or popup balloon to any HTML element supporting an onclick event. The style of this callout is fairly flexible, but generally has a header/title, a close link ('X'), and the content itself, of course.
-
+The callout tag is an easy way to attach a callout or popup balloon to any HTML element supporting an onclick event. The style of this callout is fairly flexible, but generally has a header/title, a close link ('X'), and the content itself, of course. All of this (since AjaxTags 1.2) is handled by the OverLIBMWS JavaScript library. See http://www.macridesweb.com/oltest/ for complete instructions on using OverLIBMWS.
 
 =over
 
@@ -253,37 +249,21 @@ The 'callout' is an easy way to attach a callout or popup balloon to any HTML el
 
 =item * parameters
 
-=item * classNamePrefix
-
-=over
-
-CSS class name prefix to use for the callout's 'Box', 'Close', and 'Content' elements
-
-=back
-
 =item B<Optional Parameters>
 
-=item * eventType
-
-=item * postFunction
-
-=item * emptyFunction
-
-=item * errorFunction
-
-=item * boxPosition
+=item * var
 
 =over
 
-Position of callout relative to anchor (e.g., 'top-left', 'top-right' [default], 'bottom-left', or 'bottom-right')
+Name of the JavaScript object created
 
 =back
 
-=item * useTitleBar 
+=item * attachTo
 
 =over
 
-Indicated whether the title bar should be rendered. Defaults to false.
+Name of the JavaScript object to which callout will attach. You must define 'var' for this to work.
 
 =back
 
@@ -295,13 +275,19 @@ Title for callout's box header. If useTitleBar==false and no title is specified,
 
 =back
 
-=item * timeout
+=item * overlib
 
-=over
+=over 
 
-Timeout setting for callout in milliseconds. No timeout will be used by default.
+Options for OverLib
 
 =back
+
+=item * preFunction
+
+=item * postFunction
+
+=item * errorFunction
 
 =back
 
@@ -312,28 +298,22 @@ Timeout setting for callout in milliseconds. No timeout will be used by default.
 
 sub callout {
     my $self = shift;
-    my %data = ( 'classNamePrefix','callout',
-                 @_);
+    my %data = (@_);
 
     my @elements;
-    push @elements,qq[parameters: "$data{parameters}"],
-                   qq[classNamePrefix: "$data{classNamePrefix}"];
+    push @elements,qq[parameters: "$data{parameters}"];
 
     push @elements, qq[source: "$data{source}"] if $data{source};
     push @elements, qq[sourceClass: "$data{sourceClass}"] if $data{sourceClass};
-    push @elements, qq[forceSelection: "$data{forceSelection}"] if $data{forceSelection};
-    push @elements, qq[boxPosition: "$data{boxPosition}"] if $data{boxPosition};
-    push @elements, qq[useTitleBar: "$data{useTitleBar}"] if $data{useTitleBar};
     push @elements, qq[title: "$data{title}"] if $data{title};
-    push @elements, qq[timeout: "$data{timeout}"] if $data{timeout};
     push @elements, qq[eventType: "$data{eventType}"] if $data{eventType};
     push @elements, qq[postFunction: $data{postFunction}] if $data{postFunction};
-    push @elements, qq[emptyFunction: $data{emptyFunction}] if $data{emptyFunction};
     push @elements, qq[errorFunction: $data{errorFunction}] if $data{errorFunction};
-    push @elements, qq[var:"$data{var}"] if $data{var};
     push @elements, qq[attachTo:"$data{attachTo}"] if $data{attachTo};
     push @elements, qq[overlib:"$data{overlib}"] if $data{overlib};
     push @elements, qq[parser: $data{parser}] if $data{parser};
+
+    my $var = $data{var} ? "$data{var} = " : ""; 
 
     my $elem = join ',', @elements;
 
@@ -347,7 +327,7 @@ sub callout {
 
     my $scriptTag = <<END;
 <script type="text/javascript">
-    var cout = new AjaxJspTag.Callout(
+    $var new AjaxJspTag.Callout(
         "$data{baseUrl}", {
         $elem
     })
@@ -386,21 +366,27 @@ This tag expects an HTML response instead of XML and the AJAX function will not 
 
 =item B<Optional Parameters>
 
+=item * var
+
+=over
+
+Name of the JavaScript object created
+
+=back
+
+=item * attachTo
+
+=over
+
+Name of the JavaScript object to which htmlContent will attach. You must define 'var' for this to work.
+
+=back
+
 =item * eventType
 
 =item * postFunction
 
-=item * emptyFunction
-
 =item * errorFunction
-
-=item * contentXmlName
-
-=over
-
-Name of the XML property specifying the content in the returning XML
-
-=back
 
 =back
 
@@ -425,15 +411,16 @@ sub htmlContent {
     push @elements, qq[postFunction: $data{postFunction}] if $data{postFunction};
     push @elements, qq[emptyFunction: $data{emptyFunction}] if $data{emptyFunction};
     push @elements, qq[errorFunction: $data{errorFunction}] if $data{errorFunction};
-    push @elements, qq[var:"$data{var}"] if $data{var};
     push @elements, qq[attachTo:"$data{attachTo}"] if $data{attachTo};
     push @elements, qq[parser:$data{parser}] if $data{parser};
 
     my $elem = join ',',@elements;
 
+    my $var = $data{var} ? "$data{var} = " : "";
+
     my $scriptTag = <<END;
 <script type="text/javascript">
-    new AjaxJspTag.HtmlContent(
+    $var new AjaxJspTag.HtmlContent(
         "$data{baseUrl}", {
          $elem
     })
@@ -452,9 +439,9 @@ END
 
 =over
 
-The portlet tag simulates a JSR-168  style portlet by allowing you to define a portion of the page that pulls content from another location using Ajax with or without a periodic refresh.
+The portlet tag simulates a a href="http://www.jcp.org/en/jsr/detail?id=168"JSR-168/a style portlet by allowing you to define a portion of the page that pulls content from another location using Ajax with or without a periodic refresh.
 
-This tag expects an HTML response instead of XML and the AJAX function will not parse it as XML; it will simply insert the content of the response as is. 
+This tag expects an HTML response instead of XML and the AJAX function will not parse it as XML; it will simply insert the content of the response as is.
 
 =over
 
@@ -463,8 +450,6 @@ This tag expects an HTML response instead of XML and the AJAX function will not 
 =item * baseUrl
 
 =item * source
-
-=item * target
 
 =item * title 
 
@@ -483,6 +468,22 @@ CSS class name prefix to use for the portlet's 'Box', 'Tools', 'Refresh', 'Size'
 =back
 
 =item B<Optional Parameters>
+
+=item * var
+
+=over 
+
+Name of the JavaScript object created
+
+=back
+
+=item * attachTo
+
+=over
+
+Name of the JavaScript object to which portlet will attach. You must define 'var' for this to work.
+
+=back
 
 =item * parameters
 
@@ -596,11 +597,11 @@ sub portlet {
     push @elements, qq[postFunction: $data{postFunction}] if $data{postFunction};
     push @elements, qq[emptyFunction: $data{emptyFunction}] if $data{emptyFunction};
     push @elements, qq[errorFunction: $data{errorFunction}] if $data{errorFunction};
-    push @elements, qq[var:"$data{var}"] if $data{var};
     push @elements, qq[attachTo:"$data{attachTo}"] if $data{attachTo};
     push @elements, qq[parser:"$data{parser}"] if $data{parser};
 
     my $elem = join ',',@elements;
+    my $var = "$data{var} = " ? $data{var} : "aj_$data{source} = ";
 
 
 my $box_class = $prefix . 'Box';
@@ -618,7 +619,7 @@ my $refresh_class = $prefix . 'Refresh'; my $size_class = $prefix . 'Size'; my $
     </div>
   <div id="$data{source}Title" class="$title_class">$data{title}</div>
   <div id="$data{source}Content" class="$content_class"></div> </div> <script type="text/javascript">
-    var aj_$data{source} = new AjaxJspTag.Portlet(
+    $var new AjaxJspTag.Portlet(
         "$data{baseUrl}", {
         $elem
     });
@@ -650,18 +651,64 @@ The select tag allows one to retrieve a list of values from a backend servlet (o
 
 =item * target
 
-=item * parameters
-
 
 =item B<Optional Parameters>
 
+=item * var
+
+=over
+
+Name of the JavaScript object created
+
+=back
+
+=item * attachTo
+
+=over
+
+Name of the JavaScript object to which select will attach. You must define 'var' for this to work.
+
+=back
+
+=item * parameters
+
 =item * eventType
+
+=over
+
+Specifies the event type to attach to the source field(s)
+
+=back
+
+=item * defaultOptions 
+
+=over
+
+A comma-seperated list of values of options to be marked as selected by default if they exist in the new set of options
+
+=back
+
+=item * executeOnLoad
+
+=over
+
+Indicates whether the target select/dropdown should be populated when the object is initialized (this is essentially when the form loads) [default=false]
+
+=back
+
+=item * preFunction
 
 =item * postFunction
 
-=item * emptyFunction
-
 =item * errorFunction
+
+=item * parser
+
+=over 
+
+The response parser to implement [default=ResponseHtmlParser]
+
+=back
 
 =back
 
@@ -677,24 +724,27 @@ sub select {
     my @elements;
 
     push @elements, qq[target: "$data{target}"],
-                    qq[parameters: "$data{parameters}"],
                     qq[source: "$data{source}"];
 
     
     push @elements, qq[eventType: "$data{eventType}"] if $data{eventType};
+    push @elements, qq[preFunction: $data{preFunction}] if $data{preFunction};
     push @elements, qq[postFunction: $data{postFunction}] if $data{postFunction};
-    push @elements, qq[emptyFunction: $data{emptyFunction}] if $data{emptyFunction};
     push @elements, qq[errorFunction: $data{errorFunction}] if $data{errorFunction};
-    push @elements, qq[var:"$data{var}"] if $data{var};
     push @elements, qq[attachTo:"$data{attachTo}"] if $data{attachTo};
+    push @elements, qq[parameters:"$data{parameters}"] if $data{parameters};
     push @elements, qq[parser:"$data{parser}"] if $data{parser};
+    push @elements, qq[defaultOptions:"$data{defaultOptions}"] if $data{defaultOptions};
+    push @elements, qq[executeOnLoad:"$data{executeOnLoad}"] if $data{executeOnLoad};
 
     my $elem = join ',', @elements;
+
+    my $var = $data{var} ? "$data{var} = " : "";
 
 
     my $scriptTag = <<END;
 <script type="text/javascript">
-    new AjaxJspTag.Select(
+    $var new AjaxJspTag.Select(
         "$data{baseUrl}", {
         $elem
     })
@@ -760,11 +810,35 @@ Indicates whether this tab is the initial one loaded [true|false]
 
 =item B<Optional Parameters>
 
+=item * var
+
+=over 
+
+Name of the JavaScript object created
+
+=back
+
+=item * attachTo
+
+=over 
+
+Name of the JavaScript object to which tabPanel will attach. You must define 'var' for this to work.
+
+=back
+
+=item * preFunction
+
 =item * postFunction
 
-=item * emptyFunction
-
 =item * errorFunction
+
+=item * parser
+
+=over 
+
+The response parser to implement [default=ResponseHtmlParser]
+
+=back
 
 =back
 

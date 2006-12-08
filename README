@@ -1,40 +1,400 @@
-HTML-AjaxTags version 0.01
-==========================
+NAME
+    HTML::AjaxTags - AjaxTags implementation
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+SYNOPSIS
+      use HTML::AjaxTags;
 
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
+DESCRIPTION
+    HTML::AjaxTags is a re-write of AjaxTags
+    (http://ajaxtags.sourceforge.net/index.html) for perl.
 
-INSTALLATION
+    Most of the following documentation was taken directly from the AjaxTags
+    web site. Changes were made to accommodate for calling AjaxTags methods
+    though perl instead of jsp tags.
 
-To install this module type the following:
+PARAMETER DESCRIPTIONS
+        The following parameters can be used in multiple HTML::AjaxTags
+        methods. The avilabiliy and required use of each parameter will be
+        listed under the description for the method itself.
 
-   perl Makefile.PL
-   make
-   make test
-   make install
+    * baseUrl
 
-DEPENDENCIES
+            URL of server-side action or servlet that processes search and
+            returns list of values used in autocomplete dropdown; expression
+            language (EL) is supported for this field
 
-This module requires these other modules and libraries:
+    * source
 
-  blah blah blah
+            Text field where label of autocomplete selection will be
+            populated; also the field in which the user types out the search
+            string
 
-COPYRIGHT AND LICENCE
+    * sourceClass
 
-Put the correct copyright and licence information here.
+            The CSS class name of the elements to which the callout will be
+            attached
 
-Copyright (C) 2006 by A. U. Thor
+    * target
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.8 or,
-at your option, any later version of Perl 5 you may have available.
+            Text field where value of autocomplete selection will be
+            populated
 
+    * parameters
+
+            A comma-separated list of parameters to pass to the server-side
+            action or servlet
+
+    * eventType
+
+            Specifies the event type to attach to the source field(s)
+
+    * postFunction
+
+            Function to execute after Ajax is finished, allowing for a chain
+            of additional functions to execute
+
+    * emptyFunction
+
+            Function to execute if there is an empty response
+
+    * errorFunction
+
+            Function to execute if there is a server exception (non-200 HTTP
+            response)
+
+  autoComplete(%params)
+        The autocomplete tag allows one to retrieve a list of probable
+        values from a backend servlet (or other server-side control) and
+        display them in a dropdown beneath an HTML text input field. The
+        user may then use the cursor and ENTER keys or the mouse to make a
+        selection from that list of labels, which is then populated into the
+        text field. This JSP tag also allows for a second field to be
+        populated with the value or ID of the item in the dropdown.
+
+        Required Parameters
+        * baseUrl
+        * source
+        * target
+        * parameters
+        * className
+
+                CSS class name to apply to the popup autocomplete dropdown
+
+        Optional Parameters
+        * indicator
+
+                ID of indicator region that will show during Ajax request
+                call
+
+        * appendSeparator
+
+                The separator to use for the target field when values are
+                appended [default=space]. If appendValue is not set or is
+                set to "false", this parameter has no effect.
+
+        * minimumCharacters
+
+                Minimum number of characters needed before autocomplete is
+                executed
+
+        * var
+
+                Name of the JavaScript object created
+
+        * attachTo
+
+                Name of the JavaScript object to which autocompleter will
+                attach. You must define 'var' for this to work.
+
+  callout(%params)
+        The callout tag is an easy way to attach a callout or popup balloon
+        to any HTML element supporting an onclick event. The style of this
+        callout is fairly flexible, but generally has a header/title, a
+        close link ('X'), and the content itself, of course. All of this
+        (since AjaxTags 1.2) is handled by the OverLIBMWS JavaScript
+        library. See http://www.macridesweb.com/oltest/ for complete
+        instructions on using OverLIBMWS.
+
+        Required Parameters
+        * baseUrl
+        * source OR sourceClass
+        * parameters
+        Optional Parameters
+        * var
+
+                Name of the JavaScript object created
+
+        * attachTo
+
+                Name of the JavaScript object to which callout will attach.
+                You must define 'var' for this to work.
+
+        * title
+
+                Title for callout's box header. If useTitleBar==false and no
+                title is specified, then the value attribute of the returned
+                XML will be used as the title.
+
+        * overlib
+
+                Options for OverLib
+
+        * preFunction
+        * postFunction
+        * errorFunction
+
+  htmlContent(%params)
+        The HTML content tag allows you to fill a region on the page (often
+        a DIV tag) with any HTML content pulled from another webpage. The
+        AJAX action may be activated by attaching it to an anchor link or
+        form field.
+
+        This tag expects an HTML response instead of XML and the AJAX
+        function will not parse it as XML; it will simply insert the content
+        of the response as is.
+
+        Required Parameters
+        * baseUrl
+        * source OR sourceClass
+        * target
+        * parameters
+        Optional Parameters
+        * var
+
+                Name of the JavaScript object created
+
+        * attachTo
+
+                Name of the JavaScript object to which htmlContent will
+                attach. You must define 'var' for this to work.
+
+        * eventType
+        * postFunction
+        * errorFunction
+
+  portlet(%params)
+        The portlet tag simulates a a
+        href="http://www.jcp.org/en/jsr/detail?id=168"JSR-168/a style
+        portlet by allowing you to define a portion of the page that pulls
+        content from another location using Ajax with or without a periodic
+        refresh.
+
+        This tag expects an HTML response instead of XML and the AJAX
+        function will not parse it as XML; it will simply insert the content
+        of the response as is.
+
+        Required Parameters
+        * baseUrl
+        * source
+        * title
+
+                Title for portlet header
+
+        * classNamePrefix
+
+                CSS class name prefix to use for the portlet's 'Box',
+                'Tools', 'Refresh', 'Size', 'Close', 'Title', and 'Content'
+                elements
+
+        Optional Parameters
+        * var
+
+                Name of the JavaScript object created
+
+        * attachTo
+
+                Name of the JavaScript object to which portlet will attach.
+                You must define 'var' for this to work.
+
+        * parameters
+        * postFunction
+        * emptyFunction
+        * errorFunction
+        * imageClose
+
+                Image used for the close icon
+
+        * imageMaximize
+
+                Image used for the maximize icon
+
+        * imageMinimize
+
+                Image used for the minimize icon
+
+        * imageRefresh
+
+                Image used for the refresh icon
+
+        * refreshPeriod
+
+                The time (in seconds) the portlet waits before automatically
+                refreshing its content. If no period is specified, the
+                portlet will not refresh itself automatically, but must be
+                commanded to do so by clicking the refresh image/link (if
+                one is defined). Lastly, the refresh will not occur until
+                after the first time the content is loaded, so if
+                executeOnLoad is set to false, the refresh will not begin
+                until you manually refresh the first time.
+
+        * executeOnLoad
+
+                Indicates whether the portlet's content should be retrieved
+                when the page loads [default=true]
+
+        * expireDays
+
+                Number of days cookie should persist
+
+        * expireHours
+
+                Number of hours cookie should persist
+
+        * expireMinutes
+
+                Number of minutes cookie should persist
+
+  select(%params)
+        The select tag allows one to retrieve a list of values from a
+        backend servlet (or other server-side control) and display them in
+        another HTML select box.
+
+        Required Parameters
+        * baseUrl
+        * source
+        * target
+        Optional Parameters
+        * var
+
+                Name of the JavaScript object created
+
+        * attachTo
+
+                Name of the JavaScript object to which select will attach.
+                You must define 'var' for this to work.
+
+        * parameters
+        * eventType
+
+                Specifies the event type to attach to the source field(s)
+
+        * defaultOptions
+
+                A comma-seperated list of values of options to be marked as
+                selected by default if they exist in the new set of options
+
+        * executeOnLoad
+
+                Indicates whether the target select/dropdown should be
+                populated when the object is initialized (this is
+                essentially when the form loads) [default=false]
+
+        * preFunction
+        * postFunction
+        * errorFunction
+        * parser
+
+                The response parser to implement
+                [default=ResponseHtmlParser]
+
+  tabPanel(%params)
+        Provides a tabbed page view of content from different resources.
+
+        Required Parameters
+        * panelStyleId
+        * contentStyleId
+        * currentStyleId
+        * tab
+
+                Tab is an array reference of hash references. Each hash
+                reference describes a single tab in the tabPanel. Each hash
+                reference must include:
+
+            * baseUrl
+            * caption
+
+                    The caption for this tab
+
+            Optional aruments include:
+
+            * parameters
+            * defaultTab
+
+                    Indicates whether this tab is the initial one loaded
+                    [true|false]
+
+        Optional Parameters
+        * var
+
+                Name of the JavaScript object created
+
+        * attachTo
+
+                Name of the JavaScript object to which tabPanel will attach.
+                You must define 'var' for this to work.
+
+        * preFunction
+        * postFunction
+        * errorFunction
+        * parser
+
+                The response parser to implement
+                [default=ResponseHtmlParser]
+
+  toggle(%params)
+        The toggle tag will change the value of a hidden form field between
+        true and false, toggle an image between two source files, and
+        replace the inner HTML content of another tag (div, span, etc).
+
+        Required Parameters
+        * baseUrl
+        * image
+
+                Image tag ID that will be toggled on/off
+
+        * state
+
+                ID of hidden form field used to hold the current state
+
+        * stateXmlName
+
+                Name of the XML property specifying the state in the
+                returning XML
+
+        * imagePattern
+
+                URL pattern of images used to indicate different status
+
+        Optional Parameters
+        * parameters
+        * eventType
+        * postFunction
+        * emptyFunction
+        * errorFunction
+
+  updateField(%params)
+        Builds the JavaScript required to update one or more form fields
+        based on the value of another single field.
+
+        Required Parameters
+        * baseUrl
+        * source
+        * target
+        * parameters
+        * action
+
+                ID of form button or image tag that will fire the onclick
+                event
+
+        Optional Parameters
+        * eventType
+        * postFunction
+        * emptyFunction
+        * errorFunction
+
+AUTHOR
+    Kevin McGrath, kmcgrath@baknet.com
+
+SEE ALSO
+    perl(1)
 
